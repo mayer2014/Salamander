@@ -23,40 +23,10 @@ class HomeController extends BaseController
         return $this->container->renderer->render($response, 'home.html');
     }
 
-    public function sendSMS(Request $request, Response $response) {
-        $tel = InputFilter::get('tel');
-        $validator = new Validator(['tel'=> $tel]);
-        $validator->setRules(['tel' => 'required|mobile'],
-            ['tel' => '手机号']
-        );
-        if($validator->validate()) {
-            $user = new User();
-            if($user->exists($tel)) {
-                $response = $response->withJson(set_api_array(1, '手机号已注册'));
-            } else {
-                $sender = new Sender();
-                $chkcode = new Chkcode();
-                $code = $chkcode->generate(range(0, 9), 4);
-                $chkcode->set($code, 'phone_code');
-                $content = "【一米发】您的验证码是{$code}。如非本人操作，请忽略本短信";
-                if($sender->send($tel, $content)) {
-                    $response = $response->withJson(set_api_array(0, 'ok'));
-                } else {
-                    $response = $response->withJson(set_api_array(1, '发送失败'));
-                }
-            }
-        } else {
-            $response = $response->withJson(set_api_array(1, $validator->getFirstErr()));
-        }
-        return $response;
-    }
 
-    // 上传图片
-    public function showUploadImage(Request $request, Response $response) {
-        return $this->container->renderer->render($response, 'upload_test.html');
-    }
 
-    // 上传图片
+
+    // 上传图片示例
     public function uploadImage(Request $request, Response $response) {
         $upload = new Upload([
             'maxSize' => 20 * 1024 * 1024,
