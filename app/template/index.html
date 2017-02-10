@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>邮件群发</title>
+		<link rel="stylesheet" href="css/global.css" />
+		<link rel="stylesheet" href="css/lemon.css" />
+		<link rel="stylesheet" href="css/pagination.css" />
+		<script src="/js/jquery.min.js"></script>
+		<script src="/js/async.min.js"></script>
+		<script src="/js/lemonDialog.js"></script>
+		<style>
+			thead th span{
+				display: block;
+				padding: 0;	
+				margin: 5px 0;
+			}
+			tfoot td{
+				padding: 20px 0;
+			}
+			.mail{
+				width: 250px;
+				word-break: break-all;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="main">
+			<?php include('include/header.html'); ?>
+			<div class="form">
+				<form class="add-form">
+<!--
+					<input type="hidden" name="action" value="save" /> 
+					<input type="text" class="domain" name="domain" placeholder="域名" />
+					<input type="text" class="price" name="price" placeholder="价格" />
+					<input type="text" class="country" name="country" placeholder="国别" />
+					<input type="text" class="mail" name="mail" placeholder="邮箱" />
+					<button class="lemon-button button-primary save">保存</button> 
+-->
+					<a class="lemon-button button-primary upload-btn" href="javacript:void(0)">批量上传</a>
+				</form>
+				
+			</div>
+			<div class="list">
+				<table>
+					<thead>
+						<tr>
+							<th width="140">域名<span>DOMAIN</span></th>
+							<th width="150">邮箱<span>MAIL</span></th>
+							<th width="100">注册商<span>REGISTRAR</span></th>
+							<th width="40">国别<span>COUNTRY</span></th>
+							<th width="50">价格<span>PRICE</span></th>
+							<th>标题<span>TITLE</span></th>
+							<th width="60">状态</th>
+							<th width="70">操作</th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach($domains as $item): ?>
+						<tr data-id="<?=$item['id']?>">
+							<td><?=$item['domain']?></td>
+							<td class="mail"><?=$item['mail']?></td>
+							<td><?=$item['registrar']?></td>
+							<td class="<?php if(strtoupper($item['country'])=='CN'): ?>cn<?php else: ?>en<?php endif; ?>"><?=$item['country']?></td>
+							<td><?=$item['price']?></td>
+							<td><?=$item['title']?><p class="body"><?=$item['body']?></p> <a class="show-content" href="javascript:void(0)">正文</a></td>
+							<td class="status"><?=$item['status']?></td>
+							<td>
+								<?php if($item['status']=='未发送'): ?>
+								<a href="javascript:void(0)" class="send">立即发送</a>
+								<?php endif; ?>
+							</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+					<tfoot><tr><td>
+					<a class="clearall lemon-button">清空全部</a></td><td colspan="7" align="right"><a class="lemon-button button-primary send-all" href="javacript:void(0)">全部发送</a></td></tr></tfoot>
+				</table>
+				<div class="page">
+					<ul class="pagination">
+						<?php if($page > 1): ?>
+							<li><a href="?page=<?=($page-1)?>">上一页</a></li>
+						<?php endif; ?>
+						<?php $p=1; foreach($pages as $p): ?>
+						<?php if($p=='.'): ?>
+							<li class="disabled"><span>…</span></li>
+						<?php elseif($p==$page): ?>
+							<li class="active"><a href="javascript:void(0);"><?=$p?></a></li>
+						<?php else: ?>
+							<li><a href="?page=<?=$p?>"><?=$p?></a></li>
+						<?php endif; ?>
+						<?php endforeach; ?>
+						<?php if($page < $p): ?>
+							<li><a href="?page=<?=($page+1)?>">下一页</a></li>
+						<?php endif; ?>
+						<li class="disabled"><span id="total">总数：<?=$total?> 条</span></li>
+					</ul> 
+					
+				</div>
+			</div>
+		</div>
+		
+
+			<script type="text/template" id="upload-form">
+			<div class="Modal-Header"><a href="javascript:void(0)" class="close">X</a><h3 class="Modal-Title"><i class="lemon-icon">&#xe602;</i> 批量上传</h3></div>
+			<div class="Modal-Content">
+				<form class="lemon-form" name="modify-password">
+					<div class="lemon-content">
+						格式为CSV，每一列分别为「域名,邮箱,注册商,国别,价格」
+						<input type="file" id="txtfile" accept="text/csv" name="txt" multiple />
+					</div>
+					<div class="lemon-button-area"><button class="readtxt lemon-button button-primary">上传</button> <button class="lemon-button button-cancle close">取消</button></div>
+					<div id="loading-area" class="loading-area">处理中...</div>
+				</form>
+			</div>
+		</script>
+		<?php require('include/footer.html'); ?>
+		<script>
+			$(function(){
+				$('.send').click(function(){
+					
+					var tr = $(this).parents('tr');
+					var id = tr.data('id');
+					var cell = $(this).parent('td');
+					cell.html('<img src="/img/loading.svg" width=20 />');
+					
+					$.post('/send.php', {id: id, action: 'add'}, function(result){
+						cell.html('<i class="icon success">&#xe600;</i> 已排队');
+						tr.find('.status').html('待发送');
+					}, 'json');
+				});
+				
+				$('.show-content').click(function(){
+					$(this).parents('td').find('.body').toggle();
+				});
+				var process = function(statics){
+					alert('上传'+statics['insert']+'个，更新'+statics['update']+'个，忽略'+statics['ignore']+'个');
+					location.reload();
+				}
+
+				$(document).on('click', '.readtxt', function(e){
+					e.preventDefault();
+					var xhr = new XMLHttpRequest();
+					var formData = new FormData();
+					formData.append('action', 'csv');
+					
+					$('.lemon-content,.lemon-button-area').hide();
+					$('.loading-area').show();
+					
+					
+					var files = document.getElementById('txtfile').files;
+					for(var i=0; i<files.length; i++) {
+						formData.append('file_'+i, files[i]); // index 为第 n 个文件的索引
+					}
+					xhr.onreadystatechange = function (aEvt) {
+					  if (xhr.readyState == 4) {
+					     if(xhr.status == 200) {
+						    var data = $.parseJSON(xhr.responseText);
+						    process(data);
+					     } else {
+					      alert("Error loading page\n");
+					     }
+					  }
+					};
+					xhr.open('post', '/ajax.php'); // url 为提交的后台地址
+					xhr.send(formData);
+				});
+			});
+			
+			$('.send-all').click(function(){
+				if(confirm('是否发送列表中的邮件？')) {
+					$('.send').click();
+				}
+			});
+			
+			$('.clearall').click(function(){
+				var total = $('#total').text();
+				if(confirm('确定清空'+total+'记录？')) {
+					$.post('/ajax.php', {action: 'clearall'}, function(result){
+						if(result.errcode==0) {
+							location.reload();
+						} else {
+							alert('清空失败');
+						}
+					}, 'json');
+				}
+			});
+			
+			$('.upload-btn').click(function(){
+				var dialog = $('#upload-form').lemonDialog();
+				dialog.open();
+			});
+		</script>
+	</body>
+</html>
