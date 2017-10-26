@@ -13,33 +13,12 @@ function set_api_array($errcode, $errmsg, $res = null) {
     ];
 }
 
-/**
- * 单例模式
- * @param $className string
- * @return mixed
- */
-function singleton($className) {
-    static $instances = array();
-    static $alias = array(
-        'tpl'=> '\\Template',
-        'db'=> '\\App\\Library\\DB',
-    );
-    if(isset($alias[$className])) {
-        $className = $alias[$className];
+function env($key) {
+    static $arr = [];
+    if(!$arr) {
+        $arr = parse_ini_file(ROOT . '/.env');
     }
-    if (!isset($instances[$className])) {
-        $object = new $className;
-        if(method_exists($object, '__setup')) {
-            $confs = require __DIR__ . '/config.php';
-            $conf = null;
-            if(strcmp($className, $alias['db']) === 0) {
-                $conf = $confs['db'];
-            }
-            call_user_func(array($object, '__setup'), $conf);
-        }
-        $instances[$className] = $object;
-    }
-    return $instances[$className];
+    return $arr[$key];
 }
 
 /**

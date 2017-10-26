@@ -2,7 +2,8 @@
 return [
     'settings' => [
         'displayErrorDetails' => true, // set to false in production
-        'addContentLengthHeader' => false, // Allow the web server to send the content-length header
+        'addContentLengthHeader' => false, // Allow the web server to send the content-length header,
+        'determineRouteBeforeAppMiddleware' => true,
 
         // Renderer settings
         'renderer' => [
@@ -15,12 +16,6 @@ return [
             'path' => __DIR__ . '/../logs/app.log',
             'level' => \Monolog\Logger::DEBUG,
         ],
-    ],
-    'db' => [
-        'dsn'=>'mysql:dbname=****;host=localhost',
-        'username'=>'****',
-        'password'=>'******',
-        'charset'=>'utf8'
     ],
     'notFoundHandler' => function ($c) {
         return function ($request, $response) use ($c) {

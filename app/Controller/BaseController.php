@@ -9,6 +9,8 @@ namespace App\Controller;
 
 use App\Service\Common;
 use Interop\Container\ContainerInterface;
+use \Psr\Http\Message\ServerRequestInterface as Request;
+use \Psr\Http\Message\ResponseInterface as Response;
 
 
 
@@ -18,37 +20,21 @@ class BaseController
 
     public function __construct(ContainerInterface $container)
     {
+        $this->container = $container;
         // 兼容原来的数据库操作
         if(property_exists($this, 'db')) {
-            $this->db = singleton('db');
+            $this->db = $this->container->db;
         }
-        $this->container = $container;
         // 公众模板变量
         if(Common::$loginUid) {
             $this->container->renderer->addAttribute('user_data', Common::$loginUserData);
         }
-        $this->assignCSRF($container);
     }
 
-    /**
-     * csrf键值对
-     * @param ContainerInterface $container
-     */
-    protected function assignCSRF(ContainerInterface $container) {
-        // CSRF token name and value
-        $csrfNameKey = $this->container->csrf->getTokenNameKey();
-        $csrfValueKey = $this->container->csrf->getTokenValueKey();
-        $csrfName = $this->container->csrf->getTokenName();
-        $csrfValue = $this->container->csrf->getTokenValue();
-        $csrfArr = [
-            'keys' => [
-                'name'  => $csrfNameKey,
-                'value' => $csrfValueKey
-            ],
-            'name'  => $csrfName,
-            'value' => $csrfValue
-        ];
-        $this->container->renderer->addAttribute('csrf', $csrfArr);
+    protected function display(Request $request, Response $response, string $template, array $data = []) {
+        $uri = $request->getUri();
+        $data['path'] = $uri->getPath();
+        return $this->container->renderer->render($response, $template, $data);
     }
 
 }

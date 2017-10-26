@@ -17,3 +17,23 @@ $container['logger'] = function ($c) {
     $logger->pushHandler(new Monolog\Handler\StreamHandler($settings['path'], $settings['level']));
     return $logger;
 };
+
+$container['db'] = function ($c) {
+    static $db = null;
+    if(!$db) {
+        $dbHost = env('MYSQL_HOST');
+        $dbName = env('MYSQL_DBNAME');
+        $dbUser = env('MYSQL_USER');
+        $dbPass = env('MYSQL_PASSWORD');
+
+        $dbConf = [
+            'dsn' => "mysql:dbname={$dbName};host={$dbHost}",
+            'username' => "{$dbUser}",
+            'password' => "{$dbPass}",
+            'charset' => 'utf8'
+        ];
+        $db = new \App\Library\DB();
+        $db->__setup($dbConf);
+    }
+    return $db;
+};

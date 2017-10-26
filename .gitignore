@@ -2,7 +2,6 @@ vendor
 .env
 .idea/
 node_modules
-/app/script/config.js
 composer.lock
 /app/configure.php
 storage/session/
