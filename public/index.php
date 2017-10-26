@@ -17,24 +17,4 @@ define('APP', ROOT . '/app');
 
 require ROOT . '/vendor/autoload.php';
 // 加载php初始化设置文件
-require APP . '/settings/ini.php';
-
-// Instantiate the app
-$settings = require APP . '/config.php';
-$app = new \Slim\App($settings);
-
-// Set up dependencies
-require APP . '/settings/dependencies.php';
-
-// Register middleware
-require APP . '/settings/middleware.php';
-
-// Register routes
-require APP . '/routes.php';
-
-// load functions
-require APP . '/functions.php';
-
-
-// Run app
-$app->run();
+require APP . '/ini.php';
